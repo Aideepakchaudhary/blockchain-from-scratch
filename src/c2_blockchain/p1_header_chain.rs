@@ -25,12 +25,28 @@ pub struct Header {
 impl Header {
     /// Returns a new valid genesis header.
     fn genesis() -> Self {
-        todo!("Exercise 1")
+        self::Header {
+            parent: 00000,
+            height: 0,
+            // We know from the lecture that we will probably need these, but we don't need them yet.
+            extrinsics_root: (),
+            state_root: (),
+            consensus_digest: (),
+        }
     }
 
     /// Create and return a valid child header.
     fn child(&self) -> Self {
-        todo!("Exercise 2")
+        let height = self.height.clone();
+
+        self::Header {
+            parent: 00000,
+            height: height + 1,
+            // We know from the lecture that we will probably need these, but we don't need them yet.
+            extrinsics_root: (),
+            state_root: (),
+            consensus_digest: (),
+        }
     }
 
     /// Verify that all the given headers form a valid chain from this header to the tip.

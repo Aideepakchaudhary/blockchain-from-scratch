@@ -2,9 +2,9 @@
 //! In these examples, we use actually switch boards as the state machine. The state is,
 //! well, just the state of the switches.
 
+use super::StateMachine;
 use crate::c1_state_machine::p1_switches::Toggle::FirstSwitch;
 use crate::c1_state_machine::p5_digital_cash::State;
-use super::StateMachine;
 
 /// This state machine models a single light switch.
 /// The internal state, a bool, represents whether the switch is on or not.
@@ -44,16 +44,15 @@ impl StateMachine for WeirdSwitchMachine {
     type Transition = Toggle;
 
     fn next_state(starting_state: &TwoSwitches, t: &Toggle) -> TwoSwitches {
-
         let mut first_switch = starting_state.first_switch.clone();
         let mut second_switch = starting_state.second_switch.clone();
         match t {
-             Toggle::FirstSwitch => first_switch = !first_switch,
-            Toggle::SecondSwitch => second_switch = !second_switch
+            Toggle::FirstSwitch => first_switch = !first_switch,
+            Toggle::SecondSwitch => second_switch = !second_switch,
         };
         return TwoSwitches {
             first_switch: first_switch.clone(),
-            second_switch: second_switch.clone()
+            second_switch: second_switch.clone(),
         };
     }
 }

@@ -4,7 +4,7 @@
 //! When a state transition spends bills, new bills are created in lesser or equal amount.
 
 use super::{StateMachine, User};
-use std::collections::HashSet;
+use std::collections::{HashSet,BTreeSet};
 
 /// This state machine models a multi-user currency system. It tracks a set of bills in
 /// circulation, and updates that set when money is transferred.
@@ -40,6 +40,18 @@ impl State {
 
     pub fn set_serial(&mut self, serial: u64) {
         self.next_serial = serial;
+    }
+
+    pub fn remove_bill(&mut self, bill: Bill) -> bool {
+        self.bills.remove(&bill)
+    }
+
+    pub fn contains_bill(&self, bill: Bill) -> bool {
+        self.bills.contains(&bill)
+    }
+
+    pub fn insert_bill(&mut self, bill: Bill) -> bool {
+        self.bills.insert(bill)
     }
 
     pub fn next_serial(&self) -> u64 {
@@ -94,8 +106,115 @@ impl StateMachine for DigitalCashSystem {
     type Transition = CashTransaction;
 
     fn next_state(starting_state: &Self::State, t: &Self::Transition) -> Self::State {
-        todo!("Exercise 1")
+        let next_serial_no = starting_state.next_serial.clone();
+        // let owner = starting_state.bills.get();
+
+        let mut current_state = starting_state.clone();
+        match t {
+            CashTransaction::Mint { minter, amount } => {
+                let bills = Bill {
+                    owner: minter.clone(),
+                    amount: amount.clone(),
+                    serial: starting_state.next_serial.clone(),
+                };
+                current_state.insert_bill(bills);
+                /// The next serial number to use when a bill is created.
+                current_state.increment_serial();
+                current_state.clone()
+            }
+            CashTransaction::Transfer { spends, receives } => {
+                Bills_tansfer(starting_state.clone(), spends.clone(), receives.clone(), )
+            }
+        }
     }
+}
+
+fn Bills_tansfer(starting_state: State, spends: Vec<Bill>, receives: Vec<Bill>) -> State {
+    if spends.len() == 0 || receives.len() == 0 {
+        return starting_state;
+    }
+
+
+    // {
+    //     let input_set: BTreeSet<_> = spends.iter().collect();
+    //     if input_set.len() < spends.len() {
+    //         return starting_state;
+    //     }
+    // }
+    //
+    // {
+    //     let output_set: BTreeSet<_> = receives.iter().collect();
+    //     if output_set.len() < receives.len() {
+    //         return starting_state;
+    //     }
+    // }
+
+
+
+    let mut next_state = starting_state.clone();
+
+    let mut total_input_amount = 0;
+    let mut total_output_amount = 0;
+    for input in spends.iter() {
+        let amount = input.amount.clone();
+        let serial = input.serial.clone();
+
+        // check if bills are present or not
+        if !next_state.contains_bill(input.clone()) {
+            return starting_state;
+        }
+
+        // if total_input_amount.checked_add(amount).is_none() {
+        //     return starting_state;
+        // }
+
+        total_input_amount += amount.clone();
+    }
+
+    for output in receives.iter() {
+        let amount = output.amount.clone();
+        let serial = output.serial.clone();
+
+        if amount <= 0 {
+            return starting_state;
+        }
+        if !next_state.contains_bill(output.clone()) {
+            return starting_state;
+        }
+
+        total_output_amount += amount;
+    }
+
+    // Update the state
+
+    if total_output_amount > total_input_amount {
+        return starting_state;
+    }
+
+    for input in spends.iter() {
+        next_state.remove_bill(input.clone());
+    }
+
+    for output in receives.iter() {
+        // if next_state.next_serial().checked_add(1).is_none() {
+        //     return starting_state;
+        // }
+
+        // if output.serial != next_state.next_serial {
+        //     return starting_state;
+        // }
+
+        let bill = Bill {
+            owner: output.owner,
+            amount: output.amount.clone(),
+            serial: next_state.next_serial(),
+        };
+
+        next_state.increment_serial();
+        next_state.insert_bill(bill);
+    }
+
+    next_state
 }
 
 #[test]
